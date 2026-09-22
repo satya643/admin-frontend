@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+@theme {
+  /* ---- brand (admin console theme — charcoal + indigo). Deliberately its
+     own palette, distinct from both the shop's navy+gold brand mark (the
+     Logo component keeps its own literal navy/gold — that's the company
+     identity, not this tool's chrome) and from the semantic signal colors
+     below, so "primary action" is never confused with "success". Every
+     component reads these by name (bg-brand-navy, text-brand-gold-deep,
+     etc.), so retargeting the values here re-skins the whole app — sidebar,
+     buttons, focus rings, active states, links — without touching any
+     component file. ---- */
+  --color-brand-navy: #1b1f2b;
+  --color-brand-navy-dark: #12141d;
+  --color-brand-gold: #6366f1;
+  --color-brand-gold-light: #a5b4fc;
+  --color-brand-gold-deep: #4338ca;
+  --color-brand-cream: #f6f6fb;
+
+  /* ---- surfaces & ink ---- */
+  --color-paper: #f4f5f8;
+  --color-paper-raised: #ffffff;
+  --color-ink: #1b1f2b;
+  --color-ink-muted: #64748b;
+  --color-rule: rgba(27, 31, 43, 0.09);
+  --color-rule-strong: rgba(27, 31, 43, 0.16);
+
+  /* ---- signal colors ---- */
+  --color-signal-success: #3f8f5f;
+  --color-signal-warning: #b4633a;
+  --color-signal-danger: #b23a34;
+  --color-signal-info: #2e5e8f;
+
+  /* ---- garment lifecycle stage colors (10 stages) ---- */
+  --color-stage-available: #4c7a63;
+  --color-stage-reserved: #d69a2d;
+  --color-stage-rented: #172b4d;
+  --color-stage-returned: #4a5c7a;
+  --color-stage-inspection: #b4633a;
+  --color-stage-laundry: #2e7a78;
+  --color-stage-quality: #6b4c7a;
+  --color-stage-ready: #3f8f5f;
+  --color-stage-retired: #837c70;
+  --color-stage-sold: #8a5f16;
+
+  /* ---- type ---- */
+  --font-display: var(--font-fraunces), "Iowan Old Style", serif;
+  --font-ui: var(--font-jost), "Segoe UI", sans-serif;
+  --font-mono: var(--font-mono-console), "SFMono-Regular", monospace;
+
+  /* ---- radius: soft, modern — was a sharp 3px/2px "paper ticket" look;
+     rounder corners read as a premium dashboard instead of a receipt ---- */
+  --radius-ticket: 16px;
+  --radius-chip: 10px;
+
+  /* ---- elevation: cards were flat (border only) — these give them real
+     depth against the new gray page background ---- */
+  --shadow-card: 0 1px 2px rgba(27, 31, 43, 0.04), 0 8px 24px -12px rgba(27, 31, 43, 0.12);
+  --shadow-card-hover: 0 2px 4px rgba(27, 31, 43, 0.06), 0 12px 32px -12px rgba(27, 31, 43, 0.18);
+  --shadow-popover: 0 4px 12px rgba(27, 31, 43, 0.08), 0 16px 40px -16px rgba(27, 31, 43, 0.22);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-paper);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-gold);
+  outline-offset: 2px;
+}
+
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--color-brand-gold) !important;
+}
+
+/* Every card/panel/table/drawer/modal in the app uses bg-paper-raised as its
+   surface — giving that one class real elevation (instead of a flat border)
+   is what makes the whole panel feel like a premium dashboard rather than a
+   sheet of paper. Elements that opt into interactivity (.card-interactive)
+   lift further and get a pointer cursor on hover. */
+.bg-paper-raised {
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 150ms ease, transform 150ms ease;
+}
+
+.card-interactive {
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-1px);
+}
+
+/* Modals/drawers float above everything else, so they get a stronger
+   elevation than a regular card — the compound selector (two classes) beats
+   the plain .bg-paper-raised rule above on specificity. */
+.bg-paper-raised.shadow-popover-surface {
+  box-shadow: var(--shadow-popover);
+}
+
+/* Native <select> elements throughout the admin (filters, forms) get a
+   consistent custom chevron and premium spacing instead of each browser's
+   own plain dropdown arrow — one rule here reaches every <select> in the
+   app rather than repeating this per usage site. */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 16px;
+  padding-right: 2.25rem !important;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
