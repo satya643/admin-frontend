@@ -15,6 +15,8 @@ const STATUSES: OrderStatus[] = [
   "return_in_transit",
   "closed",
   "cancelled",
+  "payment_failed",
+  "refunded",
 ];
 
 export function OrderFilters() {

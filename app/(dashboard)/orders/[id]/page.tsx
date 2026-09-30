@@ -10,7 +10,7 @@ import { listPayments } from "@/lib/data/payments";
 import { listDeliveryJobs } from "@/lib/data/delivery";
 import { PAYMENT_STATUS_META } from "@/lib/meta/payment-status";
 import { DELIVERY_STATUS_META } from "@/lib/meta/delivery-status";
-import { formatDate, formatPaise } from "@/lib/utils/format";
+import { formatDate, formatDateTime, formatPaise } from "@/lib/utils/format";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -57,10 +57,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 <li key={item.id} className="flex items-center justify-between py-3 text-sm">
                   <div>
                     <Link href={`/products/${item.productId}`} className="text-ink hover:underline">
-                      {item.product.name}
+                      {item.productName ?? item.product.name}
                     </Link>
                     <p className="text-xs text-ink-muted">
-                      {item.mode === "rent" ? `Rent · ${item.rentDays} days` : "Buy"} · Size {item.size}
+                      {item.mode === "rent" ? `Rent · ${item.rentDays} days` : "Buy"}
+                      {item.color ? ` · ${item.color}` : ""} · Size {item.size}
                       {item.garmentUnit ? ` · SKU ${item.garmentUnit.sku}` : ""}
                     </p>
                   </div>
@@ -73,12 +74,25 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 </li>
               ))}
             </ul>
-            <div className="mt-3 flex justify-between border-t border-rule pt-3 text-sm">
-              <span className="text-ink-muted">Total (incl. deposit)</span>
-              <span className="font-mono font-medium tabular-nums text-ink">
-                {formatPaise(order.totalPaise + order.depositTotalPaise, order.currency)}
-              </span>
-            </div>
+            <dl className="mt-3 space-y-1 border-t border-rule pt-3 text-sm">
+              {[
+                ["Subtotal", order.subtotalPaise],
+                [`Discount${order.couponCode ? ` (${order.couponCode})` : ""}`, -order.discountPaise],
+                [`Delivery${order.deliveryMethodLabel ? ` · ${order.deliveryMethodLabel}` : ""}`, order.deliveryFeePaise],
+                ["Refundable deposit", order.depositTotalPaise],
+              ]
+                .filter(([label, amount]) => amount !== 0 || label === "Subtotal")
+                .map(([label, amount]) => (
+                  <div key={label as string} className="flex justify-between text-ink-muted">
+                    <dt>{label}</dt>
+                    <dd className="font-mono tabular-nums">{formatPaise(amount as number, order.currency)}</dd>
+                  </div>
+                ))}
+              <div className="flex justify-between pt-1">
+                <dt className="text-ink">Charged (incl. deposit)</dt>
+                <dd className="font-mono font-medium tabular-nums text-ink">{formatPaise(order.totalPaise + order.depositTotalPaise, order.currency)}</dd>
+              </div>
+            </dl>
           </div>
 
           <div className="rounded-[var(--radius-ticket)] border border-rule bg-paper-raised p-4">
@@ -125,7 +139,30 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           </div>
         </div>
 
-        <OrderStatusPanel orderId={order.id} currentStatus={order.status} allowedNext={allowedNextOrderStatuses(order.status)} />
+        <div className="flex flex-col gap-6">
+          <OrderStatusPanel orderId={order.id} currentStatus={order.status} allowedNext={order.allowedNextStatuses ?? allowedNextOrderStatuses(order.status)} />
+
+          <div className="rounded-[var(--radius-ticket)] border border-rule bg-paper-raised p-4">
+            <h2 className="mb-3 font-display text-base text-ink">Timeline</h2>
+            {order.status === "pending_payment" && order.paymentExpiresAt ? (
+              <p className="mb-3 text-xs text-ink-muted">Stock held until {formatDateTime(order.paymentExpiresAt)} — released automatically if unpaid.</p>
+            ) : null}
+            {(order.events ?? []).length === 0 ? (
+              <p className="text-sm text-ink-muted">No events recorded.</p>
+            ) : (
+              <ol className="space-y-3">
+                {[...order.events].reverse().map((event) => (
+                  <li key={event.id} className="text-sm">
+                    <p className="text-ink">{event.message}</p>
+                    <p className="text-xs capitalize text-ink-muted">
+                      {formatDateTime(event.createdAt)} · {event.actor}
+                    </p>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </div>
       </div>
     </>
   );

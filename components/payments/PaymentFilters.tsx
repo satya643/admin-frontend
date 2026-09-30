@@ -6,7 +6,7 @@ import { PAYMENT_STATUS_META } from "@/lib/meta/payment-status";
 import type { PaymentMethod, PaymentStatus } from "@/types/payment";
 
 const STATUSES: PaymentStatus[] = ["pending", "paid", "partially_refunded", "refunded", "failed"];
-const METHODS: PaymentMethod[] = ["card", "wallet", "bank_transfer"];
+const METHODS: PaymentMethod[] = ["card", "upi", "netbanking", "wallet", "bank_transfer", "other"];
 
 export function PaymentFilters() {
   const [status, setStatus] = useUrlParam("status", "all");
